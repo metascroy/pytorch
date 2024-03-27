@@ -802,8 +802,13 @@ class Module:
             with torch.no_grad():
                 param_applied = fn(param)
             p_should_use_set_data = compute_should_use_set_data(param, param_applied)
+
+            # subclasses may have multiple child tensors so we need to use swap_tensors
+            is_subclass = isinstance(param_applied, torch.Tensor) and type(param_applied) is not torch.Tensor
+            p_should_use_swap_tensors = should_use_swap_tensors or is_subclass
+
             param_grad = param.grad
-            if should_use_swap_tensors:
+            if p_should_use_swap_tensors:
                 try:
                     if param_grad is not None:
                         # Accessing param.grad makes its at::Tensor's use_count 2, which will prevent swapping.
